@@ -1,0 +1,83 @@
+#!/bin/bash
+yum -y update
+
+# Install and enable AWS Systems Manager Agent
+cd /tmp
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
+
+# Install Apache Web Server and PHP
+yum install -y httpd mysql
+amazon-linux-extras install -y php7.2
+
+# Download Inventory App Lab files
+wget https://eu-west-2-tcprod.s3.eu-west-2.amazonaws.com/courses/ILT-TF-200-ARCHIT/v7.4.6.prod-c1129192/lab-4-HA/scripts/inventory-app.zip
+unzip inventory-app.zip -d /var/www/html/
+
+# Download and install the AWS SDK for PHP
+wget https://github.com/aws/aws-sdk-php/releases/download/3.62.3/aws.zip
+unzip -q aws.zip -d /var/www/html
+
+# Load Amazon Aurora DB connection details from AWS CloudFormation
+un="dbadmin"
+pw="lab-password"
+ep="inventory-cluster.cluster-co1vxbwnxuwq.eu-west-2.rds.amazonaws.com"
+db="inventory"
+#mysql -u $un -p$pw -h $ep $db < /var/www/html/sql/inventory.sql
+
+# Populate PHP app settings with DB info
+sed -i "s/DBENDPOINT/$ep/g" /var/www/html/get-parameters.php
+sed -i "s/DBNAME/$db/g" /var/www/html/get-parameters.php
+sed -i "s/DBUSERNAME/$un/g" /var/www/html/get-parameters.php
+sed -i "s/DBPASSWORD/$pw/g" /var/www/html/get-parameters.php
+
+# Turn on web server
+systemctl start httpd.service
+systemctl enable httpd.service
+
+----
+ARN: arn:aws:sns:us-west-2:492808728144:resize-image-topic20230601
+Topic owner: 492808728144
+
+-- Bucket ARN: arn:aws:s3:::labbucketkl20230601
+-- file contents:
+{
+    "Version": "2012-10-17",
+    "Id": "Policy1621958846486",
+    "Statement": [
+        {
+            "Sid": "OriginalPublicReadPolicy",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::labbucketkl20230601/*"
+        }
+    ]
+}
+
+-- Amazon S3 canonical user ID:
+b747999abcf6dbfda53d1947568b21568a302d890f422a201ea2d46316c30ced2b28b9d1c221e747563f55963f5e19e0
+
+--Bucket policy
+arn:aws:s3:::labbucketkl20230602
+
+--
+{
+    "Version": "2012-10-17",
+    "Id": "Policy1621958846486",
+    "Statement": [
+        {
+            "Sid": "OriginalPublicReadPolicy",
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": [
+                "s3:GetObject",
+                "s3:GetObjectVersion"
+            ],
+            "Resource": "arn:aws:s3:::labbucketkl20230602/*"
+        }
+    ]
+}
